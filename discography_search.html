@@ -35,14 +35,14 @@ div#container {
     /*validCheck function is used to check whether uses input something in the box
      *@par: input_form -contained the form object
      */
-    function validCheck(input_form)
+    function validateForm()
     {
-        var input = input_form.search.value; // get the search infor.
-        if(!input) // if nothing input, return false, give a alert
+        var x=document.forms["myForm"]["search"].value;
+        if (x==null || x=="")
         {
-            alert("Please enter something in the search box");
-            return 0;
-        }
+	        alert("Please enter something in the search box");
+	        return false;
+	    }
     }
     </script>
 </head>
@@ -55,7 +55,7 @@ div#container {
     </center>
 
     <div id="container">
-        <form method="post" action="">
+        <form name="myForm"	method="post" action="../cgi-bin/encoding.pl" onsubmit="return validateForm()">
             <div id="menu">
                 Search:
             </div>
@@ -85,7 +85,7 @@ div#container {
             </div>
 
             <div id="button">
-                <input type="submit" value="Search" onclick="validCheck(this.form)">
+                <input type="submit" value="Search">
             </div>
         </form>
     </div>
