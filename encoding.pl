@@ -44,14 +44,13 @@ for ($i = 1; $i <= $#contents || $i < 6; $i++) {
 		}
 		
 		if($flag == 1) {
-	    if ($contentLine[$j] =~ /(http[^\"]*)/) {
-	        #print $1." for Image URL\n";
-		    $result_image[$i] = $1;
-	    }
+		    if ($contentLine[$j - 1] =~ /(http[^\"]*)/) {
+		        #print $1." for Image URL\n";
+			    $result_image[$i] = $1;
+		    }
 		$flag = 0;
 		
-		} 
-		if($flag == 2) {
+		} elsif($flag == 2) {
 	    if ($contentLine[$j] =~ /(http[^\"]*)/) {
 	        #print $1." for URL link\n";
 		    #push(@result_url, $1);
@@ -65,24 +64,27 @@ for ($i = 1; $i <= $#contents || $i < 6; $i++) {
 		
 		} elsif($flag == 3) {
 			#print "_".$contents[$i]."_\n";
-			if($contentLine[$j] =~ /([A-Za-z].+[A-Za-z])/) {
+			if($contentLine[$j] =~ /([A-Za-z][^1-9]+[A-Za-z])/) {
 				#print $1." for Genre\n";
 				#push(@result_genre, $1);
 				$result_genre[$i] = $1;
 			} 
-			elsif($contentLine[$j] =~ /(\d+s?)/) {
-			    print $1." for year\n";
+			elsif($contentLine[$j] =~ /([1-9].*[1-9s])/) {
+			    #print $1." for year\n";
 			    #push(@result_year, $1);
 			    $result_year[$i] = $1;
 			}
-			if($contents[$i] =~ /\/div/) {
+			if($contentLine[$j + 1] =~ /div/) {
 			    $flag = 0;
 			}
-		}
+			
+		} 
 
 	}
 	
 }
+
+
 my $rows = 0;
 if(5 > $#contents) {
 	$rows = $#contents;
@@ -112,13 +114,13 @@ $body = qq{
 <P>
 <table border="1">
 };
-$body .= qq{<tr><th>Image</th><th>Name</th><th>Genre(s)</th><th>Years</th><th>Details</th>};
+$body .= qq{<tr><th>Image</th><th>Name</th><th>Genre(s)</th><th>Year(s)</th><th>Details</th>};
 for $i ( 1 .. $rows ) {
-$body .= qq{<tr><td>$result_image[$i]</td>};
+$body .= qq{<tr><td><img scr="$result_image[$i]" width = "70" height = "70"</td>};
 $body .= qq{<td>$result_name[$i]</td>};
 $body .= qq{<td>$result_genre[$i]</td>};
 $body .= qq{<td>$result_year[$i]</td>};
-$body .= qq{<td>$result_url[$i]</td>};
+$body .= qq{<td><a href="$result_url[$i]">Details</a></td>};
 $body .= qq{</tr>\n};
 }
 
