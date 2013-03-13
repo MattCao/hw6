@@ -267,6 +267,30 @@ sub printTable(){
 	}else {
 		$rows = 5;
 	}
+	for(my $t = 1; $t <= $rows; $t++) {
+		if($result_year[$t] eq "") {
+			$result_year[$t] .= "NA";
+		}
+		if($result_url[$t] eq "") {
+			$result_url[$t] .= "NA";
+		}
+		if($result_image[$t] eq "") {
+			$result_image[$t] .= "NA";
+		}
+		if($result_comp[$t] eq "") {
+			$result_comp[$t] .= "NA";
+		}
+		if($result_genre[$t] eq "") {
+			$result_genre[$t] .= "NA";
+		}
+		if($result_year[$t] eq "") {
+			$result_year[$t] .= "NA";
+		}
+		if($result_title[$t] eq "") {
+			$result_title[$t] .= "NA";
+		}
+	}
+	$input =~ s/\+/ /;
 	print "Content-Type: text/html\n\n";
 	my $title = "Search Result";
 	
@@ -275,47 +299,54 @@ sub printTable(){
 				<BODY>
 				    <center>
 				        <p><h2><b>Search Result</b></h2></p>
+				        <p><h3><b>"$input" of type "$kind"</b></h3></p>
 				    </center>
 				<div align="center">
 				<P>
 				<table border="1">
 				};
-	if($kind eq "artist") {
+	if($rows <= 0) {
+		$body .= qq{
+					<p><h1><b>No discography found!</b></h1></p>
+					</div>
+					</BODY>
+					</HTML>};
+	} else {
+		if($kind eq "artist") {
 		$body .= qq{<tr><th>Image</th><th>Artist</th><th>Genre(s)</th><th>Year</th><th>Details</th>};
-	} elsif ($kind eq "album") {
-		$body .= qq{<tr><th>Image</th><th>Title</th><th>Artist</th><th>Genre(s)</th><th>Year</th><th>Details</th>};
-	} else {
-		$body .= qq{<tr><th>Iink to Song</th><th>Title</th><th>Performer</th><th>Composer</th><th>Details</th>};
-	}
-	for $i ( 1 .. $rows ) {
-	if($kind eq "song") {
-		$body .= qq{<tr><td><a href="$result_image[$i]">Song Link</a></td>};
-	} else {
-		$body .= qq{<tr><td><img scr="$result_image[$i]" width = "70" height = "70"</td>};
-	}
-	if($kind eq "album" || $kind eq "song") {
-		$body .= qq{<td>$result_title[$i]</td>};
-	}
-	$body .= qq{<td>$result_name[$i]</td>};
-	if($kind eq "song") {
-		$body .= qq{<td>$result_comp[$i]</td>};
-	} else {
-		$body .= qq{<td>$result_genre[$i]</td>};
-		$body .= qq{<td>$result_year[$i]</td>};
-
-	}
-	$body .= qq{<td><a href="$result_url[$i]">Details</a></td>};
-	$body .= qq{</tr>\n};
-	}
+		} elsif ($kind eq "album") {
+			$body .= qq{<tr><th>Image</th><th>Title</th><th>Artist</th><th>Genre(s)</th><th>Year</th><th>Details</th>};
+		} else {
+			$body .= qq{<tr><th>Iink to Song</th><th>Title</th><th>Performer</th><th>Composer</th><th>Details</th>};
+		}
+		for $i ( 1 .. $rows ) {
+		if($kind eq "song") {
+			$body .= qq{<tr><td align="middle"><a href="$result_image[$i]">Song Link</a></td>};
+		} else {
+			$body .= qq{<tr><td align="middle"><img scr="$result_image[$i]" width = "70" height = "70"</td>};
+		}
+		if($kind eq "album" || $kind eq "song") {
+			$body .= qq{<td align="middle">$result_title[$i]</td>};
+		}
+		$body .= qq{<td align="middle">$result_name[$i]</td>};
+		if($kind eq "song") {
+			$body .= qq{<td align="middle">$result_comp[$i]</td>};
+		} else {
+			$body .= qq{<td align="middle">$result_genre[$i]</td>};
+			$body .= qq{<td align="middle">$result_year[$i]</td>};
 	
-	$body .= qq{
-	</table>
-	</div>
-	</BODY>
-	</HTML>};
-	
+		}
+		$body .= qq{<td align="middle"><a href="$result_url[$i]">Details</a></td>};
+		$body .= qq{</tr>\n};
+		}
+		
+		$body .= qq{
+					</table>
+					</div>
+					</BODY>
+					</HTML>};
+	}		
 	print $body;
-
 }
 
 exit(0);
