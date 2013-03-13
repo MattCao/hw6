@@ -22,116 +22,300 @@ $url->path($rel_url);
 
 $content = LWP::Simple::get($url);
 #content handling
-@contents = split(/class="search-result artist"/, $content);
-my $flag = 0;
-my @result_image = {};
-my @result_url = {};
-my @result_name = {};
-my @result_genre = {};
-my @result_year = {};
-for ($i = 1; $i <= $#contents || $i < 6; $i++) {
-	my @contentLine = split(/\n/, $contents[$i]);
-	for($j = 0; $j <= $#contentLine; $j++) {
-		if($contentLine[$j] =~ /div class=\"cropped-image\"/) {
-			$flag = 1;
-			next;
-		} elsif($contentLine[$j] =~ /div class=\"name\"/) {
-			$flag = 2;
-			next;
-		} elsif($contentLine[$j] =~ /div class=\"info\"/) {
-			$flag = 3;
-			next;
-		}
-		
-		if($flag == 1) {
-		    if ($contentLine[$j - 1] =~ /(http[^\"]*)/) {
-		        #print $1." for Image URL\n";
-			    $result_image[$i] = $1;
-		    }
-		$flag = 0;
-		
-		} elsif($flag == 2) {
-	    if ($contentLine[$j] =~ /(http[^\"]*)/) {
-	        #print $1." for URL link\n";
-		    #push(@result_url, $1);
-		    $result_url[$i] = $1;
-		    my @stuff = $contentLine[$j] =~ />([^<]+)</g;
-		    #push(@result_name, $1);
-		    $result_name[$i] = $stuff[0];
-		    #print $stuff[0]." for Name\n";
-	    }
-		$flag = 0;
-		
-		} elsif($flag == 3) {
-			#print "_".$contents[$i]."_\n";
-			if($contentLine[$j] =~ /([A-Za-z][^1-9]+[A-Za-z])/) {
-				#print $1." for Genre\n";
-				#push(@result_genre, $1);
-				$result_genre[$i] = $1;
-			} 
-			elsif($contentLine[$j] =~ /([1-9].*[1-9s])/) {
-			    #print $1." for year\n";
-			    #push(@result_year, $1);
-			    $result_year[$i] = $1;
+$kind =~ s/s$//;
+	my @result_image = {};
+	my @result_url = {};
+	my @result_name = {};
+	my @result_comp = {};
+	my @result_genre = {};
+	my @result_year = {};
+	my @result_title = {};
+if($kind eq "artist") {
+	doArtist();
+} elsif($kind eq "album") {
+	doAlbum();
+} else {
+	doSong();
+}
+
+sub doArtist() {
+ 	@contents = split(/class="search-result artist"/, $content);
+	my $flag = 0;
+	
+	for (my $i = 1; $i <= $#contents || $i < 6; $i++) {
+		my @contentLine = split(/\n/, $contents[$i]);
+		for(my $j = 0; $j <= $#contentLine; $j++) {
+			if($contentLine[$j] =~ /div class=\"cropped-image\"/) {
+				$flag = 1;
+				next;
+			} elsif($contentLine[$j] =~ /div class=\"name\"/) {
+				$flag = 2;
+				next;
+			} elsif($contentLine[$j] =~ /div class=\"info\"/) {
+				$flag = 3;
+				next;
 			}
-			if($contentLine[$j + 1] =~ /div/) {
-			    $flag = 0;
+	
+			if($flag == 1) {
+			    if ($contentLine[$j - 1] =~ /(http[^\"]*)/) {
+			        #print $1." for Image URL\n";
+				    $result_image[$i] = $1;
+			    }
+			$flag = 0;
+	
+			} elsif($flag == 2) {
+		    if ($contentLine[$j] =~ /(http[^\"]*)/) {
+		        #print $1." for URL link\n";
+			    #push(@result_url, $1);
+			    $result_url[$i] = $1;
+			    my @stuff = $contentLine[$j] =~ />([^<]+)</g;
+			    #push(@result_name, $1);
+			    $result_name[$i] = $stuff[0];
+			    #print $stuff[0]." for Name\n";
+		    }
+			$flag = 0;
+	
+			} elsif($flag == 3) {
+				#print "_".$contents[$i]."_\n";
+				if($contentLine[$j] =~ /([A-Za-z][^1-9]+[A-Za-z])/) {
+					#print $1." for Genre\n";
+					#push(@result_genre, $1);
+					$result_genre[$i] = $1;
+				} 
+				elsif($contentLine[$j] =~ /([1-9].*[1-9s])/) {
+				    #print $1." for year\n";
+				    #push(@result_year, $1);
+				    $result_year[$i] = $1;
+				}
+				if($contentLine[$j + 1] =~ /div/) {
+				    $flag = 0;
+				}	
+			} 	
+		}
+	}
+	printTable();
+}
+
+sub doAlbum() {
+	@contents = split(/class="search-result album"/, $content);
+	my $flag = 0;
+	
+	for (my $i = 1; $i <= $#contents || $i < 6; $i++) {
+		my @contentLine = split(/\n/, $contents[$i]);
+		for(my $j = 0; $j <= $#contentLine; $j++) {
+			if($contentLine[$j] =~ /div class=\"cropped-image\"/) {
+				$flag = 1;
+				next;
+			} elsif($contentLine[$j] =~ /div class=\"artist\"/) {
+				$flag = 2;
+				next;
+			} elsif($contentLine[$j] =~ /div class=\"info\"/) {
+				$flag = 3;
+				next;
+			} elsif($contentLine[$j] =~ /div class=\"title\"/) {
+			    $flag = 4;
+				next;
+			}
+			if($flag == 1) {
+			    if ($contentLine[$j - 1] =~ /(http[^\"]*)/) {
+			        #print $1." for Image URL\n";
+				    $result_image[$i] = $1;
+			    }
+			$flag = 0;
+	
+			} elsif($flag == 2) {
+		    if ($contentLine[$j] =~ /(http[^\"]*)/) {
+		        #print $1." for URL link\n";
+			    #push(@result_url, $1);
+			    #$result_url[$i] = $1;
+			    my @stuff = $contentLine[$j] =~ />([^<]+)</g;
+			    #push(@result_name, $1);
+			    $result_name[$i] = $stuff[0];
+			    #print $stuff[0]." for Artist\n";
+		    }
+			$flag = 0;
+	
+			} elsif($flag == 3) {
+				#print "_".$contents[$i]."_\n";
+				if($contentLine[$j] =~ /([A-Za-z][^1-9]+[A-Za-z])/) {
+					#print $1." for Genre\n";
+					#push(@result_genre, $1);
+					$result_genre[$i] = $1;
+				} 
+				elsif($contentLine[$j] =~ /([1-9].*[1-9s])/) {
+				    #print $1." for year\n";
+				    #push(@result_year, $1);
+				    $result_year[$i] = $1;
+				}
+				if($contentLine[$j + 1] =~ /div/) {
+				if($contentLine[$j + 1] =~ /([A-Za-z][^1-9]+[A-Za-z])/) {
+					#print $1." for Genre\n";
+					#push(@result_genre, $1);
+					$result_genre[$i] = $1;
+				} 
+				elsif($contentLine[$j + 1] =~ /([1-9].*[1-9s])/) {
+				    #print $1." for year\n";
+				    #push(@result_year, $1);
+				    $result_year[$i] = $1;
+				}
+				    $flag = 0;
+				}	
+			}  elsif($flag == 4) {
+			    if ($contentLine[$j] =~ /(http[^\"]*)/) {
+			        #print $1." for URL link\n";
+				    #push(@result_url, $1);
+				    $result_url[$i] = $1;
+				    my @stuff = $contentLine[$j] =~ />([^<]+)</g;
+				    #push(@result_name, $1);
+				    $result_title[$i] = $stuff[0];
+				    #print $stuff[0]." for Artist\n";
+			    }
+				$flag = 0;
+	
+			}	
+		}
+	}
+	printTable();
+}
+
+sub doSong() {
+	@contents = split(/class="search-result song"/, $content);
+	my $flag = 0;
+	
+	for (my $i = 1; $i <= $#contents || $i < 6; $i++) {
+		my @contentLine = split(/\n/, $contents[$i]);
+		for(my $j = 0; $j <= $#contentLine; $j++) {
+			if($contentLine[$j] =~ /title=\"play\ssample\"/) {
+				$flag = 1;
+				next;
+			} elsif($contentLine[$j] =~ /div class=\"title\"/) {
+				$flag = 2;
+				#next;
+			} elsif($contentLine[$j] =~ /span class=\"performer\"/) {
+				$flag = 3;
+				#next;
+			} elsif($contentLine[$j] =~ /div class=\"info\"/) {
+			    $flag = 4;
+				next;
+			}
+			else {
+				
 			}
 			
-		} 
+			if($flag == 1) {
+			    if ($contentLine[$j - 1] =~ /(http[^\"]*)/) {
+			        #print $1." for Image URL\n";
+				    $result_image[$i] = $1;
+				    $flag = 0;
+			    }
+	
+			} elsif($flag == 2) {
+		    if ($contentLine[$j+1] =~ /(http[^\"]*)">([^<]+)</) {
+		        $contentLine[$j+1] = $';
+		        #print "$1\t$2\n";
+		        #print $1." for URL link\n";
+			    #push(@result_url, $1);
+			    $result_url[$i] = $1;
+			    #my @stuff = $contentLine[$j] =~ />([^<]+)</g;
+			    #push(@result_name, $1);
+			    #$result_title[$i] = $stuff[0];
+			    $result_title[$i] = $2;
+			    #print $stuff[0]." for Artist\n";
+			    $flag = 0;
+		    }
+	
+			} elsif($flag == 3) {
+			    $result_name[$i] = "";
+			    while($contentLine[$j] =~ /http[^\"]*">([^<]+)</) {
+			        $result_name[$i] = $result_name[$i]."$1 / ";
+			        $contentLine[$j] = $';
+			    }
+		     	$result_name[$i] =~ s/\s\/\s$//;
+		     	#print $result_name[$i]."\n";
+		     	$flag = 0;
+				#if ($contentLine[$j] =~ /http[^\"]*">([^<]+)</) {
+			        #print $1." for URL link\n";
+				    #push(@result_url, $1);
+				    #$result_url[$i] = $1;
+				    #my @stuff = $contentLine[$j] =~ />([^<]+)</g;
+				    #push(@result_name, $1);
+				    #$result_name[$i] = $result_name[$i].$1;
+				    #print $stuff[0]." for Performer\n";
+				    #if($contentLine[$j + 1] =~ /span/) {
+				    #	$flag = 0;
+				    #}	
+			   # }
+			}  elsif($flag == 4) {
+			    $result_comp[$i] = "";
+			    while($contentLine[$j] =~ /http[^\"]*">([^<]+)</) {
+			        $result_comp[$i] = $result_comp[$i]."$1 / ";
+			        $contentLine[$j] = $';
+			    }
+		     	$result_comp[$i] =~ s/\s\/\s$//;
+				$flag = 0;
+			}
+		}
+	}
+	printTable();
+}
+
+	
+sub printTable(){
+	my $rows = 0;
+	if(5 > $#contents) {
+		$rows = $#contents;
+	}else {
+		$rows = 5;
+	}
+	print "Content-Type: text/html\n\n";
+	my $title = "Search Result";
+	
+	my $body = qq{<HTML>\n<HEAD>\n<title>$title</title></head>};
+	$body .= qq{
+				<BODY>
+				    <center>
+				        <p><h2><b>Search Result</b></h2></p>
+				    </center>
+				<div align="center">
+				<P>
+				<table border="1">
+				};
+	if($kind eq "artist") {
+		$body .= qq{<tr><th>Image</th><th>Artist</th><th>Genre(s)</th><th>Year</th><th>Details</th>};
+	} elsif ($kind eq "album") {
+		$body .= qq{<tr><th>Image</th><th>Title</th><th>Artist</th><th>Genre(s)</th><th>Year</th><th>Details</th>};
+	} else {
+		$body .= qq{<tr><th>Iink to Song</th><th>Title</th><th>Performer</th><th>Composer</th><th>Details</th>};
+	}
+	for $i ( 1 .. $rows ) {
+	if($kind eq "song") {
+		$body .= qq{<tr><td><a href="$result_image[$i]">Song Link</a></td>};
+	} else {
+		$body .= qq{<tr><td><img scr="$result_image[$i]" width = "70" height = "70"</td>};
+	}
+	if($kind eq "album" || $kind eq "song") {
+		$body .= qq{<td>$result_title[$i]</td>};
+	}
+	$body .= qq{<td>$result_name[$i]</td>};
+	if($kind eq "song") {
+		$body .= qq{<td>$result_comp[$i]</td>};
+	} else {
+		$body .= qq{<td>$result_genre[$i]</td>};
+		$body .= qq{<td>$result_year[$i]</td>};
 
 	}
+	$body .= qq{<td><a href="$result_url[$i]">Details</a></td>};
+	$body .= qq{</tr>\n};
+	}
 	
-}
-
-
-my $rows = 0;
-if(5 > $#contents) {
-	$rows = $#contents;
-}else {
-	$rows = 5;
-}
-
-print "Content-Type: text/html\n\n";
-my $title = "Search Result";
-print header();
-print body();
-
-sub header() {
-
-return qq{<HTML>\n<HEAD>\n<title>$title</title></head>};
+	$body .= qq{
+	</table>
+	</div>
+	</BODY>
+	</HTML>};
+	
+	print $body;
 
 }
-
-sub body() {
-
-$body = qq{
-<BODY>
-    <center>
-        <p><h2><b>Search Result</b></h2></p>
-    </center>
-<div align="center">
-<P>
-<table border="1">
-};
-$body .= qq{<tr><th>Image</th><th>Name</th><th>Genre(s)</th><th>Year(s)</th><th>Details</th>};
-for $i ( 1 .. $rows ) {
-$body .= qq{<tr><td><img scr="$result_image[$i]" width = "70" height = "70"</td>};
-$body .= qq{<td>$result_name[$i]</td>};
-$body .= qq{<td>$result_genre[$i]</td>};
-$body .= qq{<td>$result_year[$i]</td>};
-$body .= qq{<td><a href="$result_url[$i]">Details</a></td>};
-$body .= qq{</tr>\n};
-}
-
-$body .= qq{
-</table>
-</div>
-</BODY>
-</HTML>};
-
-return $body;
-}
-
 
 exit(0);
